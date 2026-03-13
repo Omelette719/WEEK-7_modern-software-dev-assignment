@@ -5,7 +5,7 @@ from sqlalchemy import asc, desc, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Note
+from ..models import Note, Project
 from ..schemas import NoteCreate, NotePatch, NoteRead
 
 router = APIRouter(prefix="/notes", tags=["notes"])
@@ -36,7 +36,10 @@ def list_notes(
 
 @router.post("/", response_model=NoteRead, status_code=201)
 def create_note(payload: NoteCreate, db: Session = Depends(get_db)) -> NoteRead:
-    note = Note(title=payload.title, content=payload.content)
+    if payload.project_id is not None and not db.get(Project, payload.project_id):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    note = Note(title=payload.title, content=payload.content, project_id=payload.project_id)
     db.add(note)
     db.flush()
     db.refresh(note)
@@ -52,6 +55,10 @@ def patch_note(note_id: int, payload: NotePatch, db: Session = Depends(get_db)) 
         note.title = payload.title
     if payload.content is not None:
         note.content = payload.content
+    if payload.project_id is not None:
+        if not db.get(Project, payload.project_id):
+            raise HTTPException(status_code=404, detail="Project not found")
+        note.project_id = payload.project_id
     db.add(note)
     db.flush()
     db.refresh(note)
