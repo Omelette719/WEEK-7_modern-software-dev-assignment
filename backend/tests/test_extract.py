@@ -6,12 +6,21 @@ def test_extract_action_items():
     This is a note
     - TODO: write tests
     - ACTION: review PR
+    TODO fix login flow
+    Action - sync with design
+    * Prepare demo slides
     - Ship it!
     Not actionable
     """.strip()
+
     items = extract_action_items(text)
-    assert "TODO: write tests" in items
-    assert "ACTION: review PR" in items
-    assert "Ship it!" in items
+    assert items == [
+        "write tests",
+        "review PR",
+        "fix login flow",
+        "sync with design",
+        "Prepare demo slides",
+        "Ship it!",
+    ]
 
 
